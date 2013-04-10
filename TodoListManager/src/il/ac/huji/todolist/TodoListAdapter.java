@@ -19,7 +19,6 @@ public class TodoListAdapter extends ArrayAdapter<ToDoTask> {
 	public TodoListAdapter(TodoListManagerActivity activity, ArrayList<ToDoTask> todoList) {
 			super(activity, android.R.layout.simple_list_item_1, todoList);
 		}
-
 	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {

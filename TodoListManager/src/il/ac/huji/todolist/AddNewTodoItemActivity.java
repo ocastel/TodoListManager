@@ -16,18 +16,15 @@ public class AddNewTodoItemActivity extends Activity {
 		super.onCreate(unused); 
 		setContentView(R.layout.add_new_todo_item_activity);
 		
-        findViewById(R.id.btnOK).setOnClickListener(
-        	new OnClickListener()
-        	{
+        findViewById(R.id.btnOK).setOnClickListener(new OnClickListener() {
 				@Override
 				public void onClick(View v) {
 					Intent result = new Intent();
 					EditText edtText = (EditText) findViewById(R.id.edtNewItem);
-					result.putExtra("task", edtText.getText().toString()); 
+					result.putExtra("title", edtText.getText().toString()); 
 					DatePicker dp = (DatePicker) findViewById(R.id.dpResult);
-					Date date= (Date) new Date(
-							dp.getYear()-1900, dp.getMonth(), dp.getDayOfMonth());	
-					result.putExtra("dueDate", date);
+					Date date= (Date) new Date(dp.getYear()-1900, dp.getMonth(), dp.getDayOfMonth());	
+					result.putExtra("due", date);
 					setResult(RESULT_OK, result); 
 					finish();
 				}

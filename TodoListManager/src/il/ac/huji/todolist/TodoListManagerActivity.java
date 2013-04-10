@@ -18,6 +18,9 @@ import android.content.Intent;
 
 public class TodoListManagerActivity extends Activity {
 
+    private TodoDAL todoDal;
+    private TodoDBAdapter todoDBAdapter;
+    
     private TodoListAdapter adapter;
     private ArrayList<ToDoTask> todoList;
     private ListView todoListView;
@@ -26,22 +29,28 @@ public class TodoListManagerActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_todo_list_manager);
-        todoList = new ArrayList<ToDoTask>();
-        todoListView = (ListView)findViewById(R.id.lstTodoItems);
-        adapter = new TodoListAdapter(this, todoList);
-        todoListView.setAdapter(adapter);
+
+        todoDal = new TodoDAL(this); // DB maintainance
+
+        todoListView = (ListView)findViewById(R.id.lstTodoItems);        
         registerForContextMenu(todoListView);
+
+        String[] from = {"title","due"}; // Adapter params
+		int[] to = {R.id.txtTodoTitle,R.id.txtTodoDueDate};
+        todoDBAdapter = new TodoDBAdapter(this, R.layout.row, todoDal.displayCursor,from,to);
+        todoListView.setAdapter(todoDBAdapter);
     }
     
 	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo) {
-		super.onCreateContextMenu(menu, v, menuInfo);
-		getMenuInflater().inflate(R.menu.ctxmenu, menu);		
-		
-		AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
-		ToDoTask task = (ToDoTask) todoListView.getItemAtPosition(info.position);
-		menu.setHeaderTitle(task._task);
-		if (!task._task.startsWith("Call "))
+			ContextMenuInfo info) {
+		super.onCreateContextMenu(menu, v, info);
+		getMenuInflater().inflate(R.menu.ctxmenu, menu);
+
+		String title = todoDal.displayCursor.getString(1);
+
+		menu.setHeaderTitle(title);
+
+		if (!title.startsWith("Call "))
 			{
 		 	menu.removeItem(R.id.menuItemCall);
 		}
@@ -49,15 +58,12 @@ public class TodoListManagerActivity extends Activity {
 	
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
-		AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-		int selectedItemIndex = info.position;
 		switch (item.getItemId()){
 		case R.id.menuItemDelete:
-			adapter.remove(adapter.getItem(selectedItemIndex));
+			todoDal.delete(new ToDoTask(todoDal.displayCursor.getString(1),new Date()));
 			break;
 		case R.id.menuItemCall:
-			ToDoTask task = adapter.getItem(selectedItemIndex);
-			Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:"+task._task.substring(5))); 
+			Intent dial = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:"+ todoDal.displayCursor.getString(1).substring(5))); 
 			startActivity(dial); 
 		}
 		return true;
@@ -88,12 +94,13 @@ public class TodoListManagerActivity extends Activity {
     	switch (reqCode) { 
     	case 42:
     		Date date = null;
-    		if (data.getExtras().containsKey("dueDate") )
+    		if (data.getExtras().containsKey("due") )
     		{
-        		date = (Date) data.getSerializableExtra("dueDate");    			
+        		date = (Date) data.getSerializableExtra("due");    			
     		}
-    		String task = data.getStringExtra("task");
-     		adapter.add(new ToDoTask(task, date));
+    		String task = data.getStringExtra("title");
+    		ToDoTask todoTask = new ToDoTask(task,date);
+     		todoDal.insert(todoTask);
      	break;
     	}
     }
